@@ -1,0 +1,3 @@
+>npx webpack --mode=development
+
+    --env <paramater_name>=<parameter_value> 

@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "strict": true,
+        "jsx": "react",
+        "lib": ["dom", "es6"],
+        "types": ["node"]
+    },
+    "include": [
+        "./src/*"
+    ],
+}
