@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
+
+.font {
+  font-family: "Dancing Script", cursive;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  font-size: large;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 7.5%;
+  left: 5%;
+  width: 90%;
+}
+
+#main {
+  border: none;
+  border-radius: 15px;
+  position: absolute;
+  top: 2.5%;
+  left: 5%;
+  width: 80%;
+  height: 90%;
+  padding: 5%;
+  background-color:#6b4633a8;
+}
+
+.title {
+  text-align: center;
+  color: #FCEFCB;
+}
+
+.button {
+  width: 90%;
+  height: 10%;
+  margin: 10%;
+  background-color: #FDBA14;
+  color: #FCEFCB;
+  border: none;
+  border-radius: 25px;
+  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.button p {
+  color: inherit;
+  font-size: x-large;
+  display: inline-flex;
+  padding: 1%;
+}
+
+body {
+  background-image: url('./img/background.png');
+}
+
+#placeholder_image {
+  border: none;
+  border-radius: 15px;
+  width: 300px;
+  height: 200px;
+  background-color: #FDBA14;
+  background-position: center;
+}
+
+.icon img{
+  display: inline-flex;
+  align-self: center;
+}
+
+.send {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 40px;
+  height: 40px;
+}
+
+.camera {
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 50px;
+  height: 50px;
+}

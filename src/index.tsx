@@ -10,30 +10,38 @@ class Menu extends React.Component {
     }
 
     sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
-        event.preventDefault();
         console.log('Upload button clicked');
     }
 
     openGallery(event: React.MouseEvent<HTMLAnchorElement>) {
-        event.preventDefault();
         console.log('Open gallery button clicked');
     }
 
     render(): React.JSX.Element {
         return (
             <div className='menu'>
-                <div className="title">
-                    <h1>Iustin & Alexandra 2026</h1>
-                    <h2>Galeria invita&#x21B;ilor</h2>
+                <div className="title font">
+                    <h1>Alexandra & Iustin 2026</h1>
+                    <h2>
+                        &#xCE;nc&#x103;rca&#x21B;i poze &#x15F;i videoclipuri &#xEE;n Galeria Invita&#x21B;ilor!
+                    </h2>
                 </div>
 
-                <div className="button">
-                    <a href="#" onClick={this.openGallery}>Selecta&#x21B;i poze/videoclipuri din galerie</a>
-                </div>
+                <a href="#" onClick={this.openGallery} className="button">
+                    <div className="icon">
+                        <img src="./img/camera_icon.png" alt="" className="camera"/>
+                    </div>
+                    <p className="font">Selecteaz&#x103;</p>
+                </a>
 
-                <div className="button">
-                    <a href="#" onClick={this.sendPhotos}>Inc&#x103;rca&#x21B;i</a>
-                </div>
+                <div id="placeholder_image"></div>
+
+                <a href="./success.html" onClick={this.openGallery} className="button">
+                    <div className="icon">
+                        <img src="./img/send_icon.png" alt="" className="send"/>
+                    </div>
+                    <p className="font">Trimite</p>
+                </a>
             </div>
         );
     }
