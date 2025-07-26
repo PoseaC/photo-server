@@ -1,0 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
+@import "tailwindcss";
+
+.font {
+  font-family: "Dancing Script", cursive;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-style: normal;
+  font-size: large;
+}
+
+#main {
+  background-color:#6b4633a8;
+}
+
+.title {
+  text-align: center;
+  color: #FCEFCB;
+}
+
+.button {
+  background-color: #FDBA14;
+  color: #FCEFCB;
+  text-decoration: none;
+}
+
+.button p {
+  color: inherit;
+  font-size: x-large;
+}
+
+body {
+  background-image: url('./img/background.png');
+  background-position: center;
+}
+
+.send {
+  width: 40px;
+  height: 40px;
+}
+
+.camera {
+  width: 50px;
+  height: 50px;
+}
+
+.gallery {
+  width: 40px;
+  height: 40px;
+}

@@ -1,3 +1,2 @@
+>npx @tailwindcss/cli -i ./src/tailwind-input.css -o ./src/style.css
 >npx webpack --mode=development
-
-    --env <paramater_name>=<parameter_value> 
