@@ -1,47 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap');
 @import "tailwindcss";
 
+:root {
+  --dark-color: #748daea9;
+  --light-color: #FFEAEA;
+  --accent-color: #9ECAD6;
+}
+
 .font {
-  font-family: "Dancing Script", cursive;
-  font-optical-sizing: auto;
-  font-weight: 700;
+  font-family: "Alex Brush", cursive;
+  font-weight: 400;
   font-style: normal;
-  font-size: large;
+  text-align: center;
+  color: var(--light-color);
 }
 
 #main {
-  background-color:#6b4633a8;
+  background-color: var(--dark-color);
 }
 
 .title {
-  text-align: center;
-  color: #FCEFCB;
+  font-size: 1.5rem;
 }
 
 .button {
-  background-color: #FDBA14;
-  color: #FCEFCB;
+  background-color: var(--accent-color);
   text-decoration: none;
 }
 
-.button p {
-  color: inherit;
-  font-size: x-large;
+.interactable {
+  opacity: 1;
+}
+
+.not-interactable {
+  opacity: 0.75;
+}
+
+.button .main-text {
+  font-size: 1.5rem;
+}
+
+.button .subtext {
+  font-size: 1.25rem;
 }
 
 body {
-  background-image: url('./img/background.png');
+  background-image: url(./img/background.svg);
+  background-size: cover;
   background-position: center;
 }
 
 .send {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
 }
 
 .camera {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
 }
 
 .gallery {

@@ -1,5 +1,5 @@
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 
 // https://html-shark.com/HTML/RomanianSymbols.htm - hex code for Romanian characters
 class Menu extends React.Component {
@@ -10,43 +10,70 @@ class Menu extends React.Component {
     }
 
     sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
-        console.log('Upload button clicked');
+        event.preventDefault();
+        console.log("Upload button clicked");
     }
 
     openGallery(event: React.MouseEvent<HTMLAnchorElement>) {
-        console.log('Open gallery button clicked');
+        console.log("Open gallery button clicked");
+    }
+
+    selectFiles(event: FileList | null) {
+        if (event && event.length > 0) {
+            const fileCount = event.length;
+            const selectionCountElement = document.getElementById("selection_count");
+            if (selectionCountElement) {
+                selectionCountElement.textContent = `${fileCount}`;
+            }
+
+            const sendButton = document.getElementById("send_button");
+            if (sendButton) {
+                sendButton.classList.remove("not-interactable");
+                sendButton.classList.add("interactable");
+            }
+        } else {
+            console.log("No files selected");
+        }
     }
 
     render(): React.JSX.Element {
         return (
-            <div className='place-self-center grid grid-cols-1 grid-rows-3 m-8 md:grid-rows-2'>
-                <div className="title font row-1 place-self-center">
-                    <h1>Alexandra & Iustin 2026</h1>
-                    <h2>
+            <div className="place-self-center grid grid-cols-1 m-8 md:grid-rows-4">
+                <div className="title font md:row-span-3 place-self-center grid grid-cols-1 md:grid-cols-2 grid-rows-6 md:grid-rows-2 mb-4">
+                    <h1 className="row-1 md:cols-1 md:self-end md:mb-2 self-center">Alexandra & Iustin 2026</h1>
+                    <img src="./img/photograph.jpg" alt="" className="row-span-4 md:row-span-2 md:row-start-1 md:cols-2 row-start-2 aspect-4/5 rounded-xl self-center justify-self-center max-w-[230px] object-contain w-full"/>
+                    <h2 className="row-6 md:row-2 md:cols-1 md:self-start self-center">
                         &#xCE;nc&#x103;rca&#x21B;i poze &#x15F;i videoclipuri &#xEE;n Galeria Invita&#x21B;ilor!
                     </h2>
                 </div>
 
-                <div className='row-span-2 md:row-span-1 grid grid-cols-1 justify-items-center md:grid-cols-3 gap-4 mb-16 align-middle'>
-                    <a href="#" onClick={this.openGallery} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
+                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-3 gap-4 align-middle">
+                    <label htmlFor="file-upload" className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
-                            <img src="./img/camera_icon.png" alt="" className="camera"/>
+                            <img src="./img/camera.svg" alt="" className="camera"/>
                         </div>
-                        <p className="font row-1 self-center">Selecteaz&#x103;</p>
-                    </a>
+                        <p className="font main-text pl-3 row-1 self-center justify-self-start">Selecteaz&#x103;</p>
+                    </label>
+                    <input type="file" id="file-upload" onChange={(event) => this.selectFiles(event.target.files)} multiple hidden accept="image/*, video/*"/>
 
                     <a href="#" onClick={this.openGallery} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
                             <img src="./img/gallery.svg" alt="" className="gallery"/>
                         </div>
-                        <p className="font row-1 self-center">Galerie</p>
+                        <p className="font main-text pl-3 row-1 self-center justify-self-start">Vezi Galeria</p>
                     </a>
 
-                    <a href="./success.html" onClick={this.openGallery} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
+                    <a id="send_button" href="./success.html" onClick={this.openGallery} className="button not-interactable w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
-                            <img src="./img/send_icon.png" alt="" className="send"/>
+                            <img src="./img/send.svg" alt="" className="send"/>
                         </div>
-                        <p className="font row-1 self-center">Trimite</p>
+                        <div className="pl-3 row-1 self-center grid grid-cols-1 grid-rows-2 justify-self-start">
+                            <p className="font main-text row-1 self-center justify-self-center">Trimite</p>
+                            <p className="font subtext row-2 self-center grid grid-cols-3">
+                                <p id="selection_count" className="col-1 justify-self-auto">0</p>
+                                <p className="col-start-2 col-span-2 justify-self-auto ml-2">fi&#x15F;iere</p>
+                            </p>
+                        </div>
                     </a>
                 </div>
             </div>
@@ -54,9 +81,9 @@ class Menu extends React.Component {
     }
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
+window.addEventListener("DOMContentLoaded", async () => {
     ReactDOM.render(
         <Menu />,
-        document.getElementById('main')
+        document.getElementById("main")
     );
 });
