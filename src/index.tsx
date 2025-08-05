@@ -1,89 +1,40 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import { SuccessNotification } from "./success";
+import { MainMenu } from "./mainMenu";
 
 // https://html-shark.com/HTML/RomanianSymbols.htm - hex code for Romanian characters
-class Menu extends React.Component {
+class Index extends React.Component {
+    state = { activeMenu: "main" };
+
+    static instance: Index | null = null;
+
     constructor(props: any) {
         super(props);
-        this.sendPhotos = this.sendPhotos.bind(this);
-        this.openGallery = this.openGallery.bind(this);
+        Index.instance = this;
     }
 
-    sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
-        event.preventDefault();
-        console.log("Upload button clicked");
-    }
-
-    openGallery(event: React.MouseEvent<HTMLAnchorElement>) {
-        console.log("Open gallery button clicked");
-    }
-
-    selectFiles(event: FileList | null) {
-        if (event && event.length > 0) {
-            const fileCount = event.length;
-            const selectionCountElement = document.getElementById("selection_count");
-            if (selectionCountElement) {
-                selectionCountElement.textContent = `${fileCount}`;
-            }
-
-            const sendButton = document.getElementById("send_button");
-            if (sendButton) {
-                sendButton.classList.remove("not-interactable");
-                sendButton.classList.add("interactable");
-            }
-        } else {
-            console.log("No files selected");
+    static setActiveMenu(menu: string) {
+        if (Index.instance) {
+            Index.instance.setState({ activeMenu: menu });
         }
     }
 
-    render(): React.JSX.Element {
+    render(): React.ReactNode {
         return (
-            <div className="place-self-center grid grid-cols-1 m-8 md:grid-rows-4">
-                <div className="title font md:row-span-3 place-self-center grid grid-cols-1 md:grid-cols-2 grid-rows-6 md:grid-rows-2 mb-4">
-                    <h1 className="row-1 md:cols-1 md:self-end md:mb-2 self-center">Alexandra & Iustin 2026</h1>
-                    <img src="./img/photograph.jpg" alt="" className="row-span-4 md:row-span-2 md:row-start-1 md:cols-2 row-start-2 aspect-4/5 rounded-xl self-center justify-self-center max-w-[230px] object-contain w-full"/>
-                    <h2 className="row-6 md:row-2 md:cols-1 md:self-start self-center">
-                        &#xCE;nc&#x103;rca&#x21B;i poze &#x15F;i videoclipuri &#xEE;n Galeria Invita&#x21B;ilor!
-                    </h2>
-                </div>
-
-                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-3 gap-4 align-middle">
-                    <label htmlFor="file-upload" className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
-                        <div className="icon justify-self-end row-1 mr-2 self-center">
-                            <img src="./img/camera.svg" alt="" className="camera"/>
-                        </div>
-                        <p className="font main-text pl-3 row-1 self-center justify-self-start">Selecteaz&#x103;</p>
-                    </label>
-                    <input type="file" id="file-upload" onChange={(event) => this.selectFiles(event.target.files)} multiple hidden accept="image/*, video/*"/>
-
-                    <a href="#" onClick={this.openGallery} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
-                        <div className="icon justify-self-end row-1 mr-2 self-center">
-                            <img src="./img/gallery.svg" alt="" className="gallery"/>
-                        </div>
-                        <p className="font main-text pl-3 row-1 self-center justify-self-start">Vezi Galeria</p>
-                    </a>
-
-                    <a id="send_button" href="./success.html" onClick={this.openGallery} className="button not-interactable w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
-                        <div className="icon justify-self-end row-1 mr-2 self-center">
-                            <img src="./img/send.svg" alt="" className="send"/>
-                        </div>
-                        <div className="pl-3 row-1 self-center grid grid-cols-1 grid-rows-2 justify-self-start">
-                            <p className="font main-text row-1 self-center justify-self-center">Trimite</p>
-                            <p className="font subtext row-2 self-center grid grid-cols-3">
-                                <p id="selection_count" className="col-1 justify-self-auto">0</p>
-                                <p className="col-start-2 col-span-2 justify-self-auto ml-2">fi&#x15F;iere</p>
-                            </p>
-                        </div>
-                    </a>
-                </div>
+            <div className="grid grid-cols-1 place-items-center">
+                {this.state.activeMenu === "main" && <MainMenu />}
+                {/* {this.state.activeMenu === "loading" && <LoadingScreen />} */}
+                {this.state.activeMenu === "success" && <SuccessNotification />}
             </div>
         );
     }
 }
+export const setActiveMenu = Index.setActiveMenu;
 
 window.addEventListener("DOMContentLoaded", async () => {
     ReactDOM.render(
-        <Menu />,
+        <Index />,
         document.getElementById("main")
     );
 });
