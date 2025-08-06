@@ -33,7 +33,7 @@
 }
 
 .not-interactable {
-  opacity: 0.75;
+  opacity: 0.5;
 }
 
 .button .main-text {
@@ -53,4 +53,36 @@ body {
 .icon .image {
   width: 40px;
   height: 40px;
+}
+
+.loading_anim {
+  width: 60px;
+  height: 60px;
+  animation: spin 2s reverse linear infinite;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }

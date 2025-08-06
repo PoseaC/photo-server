@@ -7,8 +7,8 @@ module.exports = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: "*.css", to: "[name].css" },
-        { from: "*.html", to: "[name].html" },
+        { from: "style.css", to: "[name].css" },
+        { from: "index.html", to: "[name].html" },
         { from: "img/*", to: "img/[name][ext]" },
         { from: "../node_modules/react/umd/react.production.min.js", to: "vendor/react.production.min.js" },
         { from: "../node_modules/react-dom/umd/react-dom.production.min.js", to: "vendor/react-dom.production.min.js" },

@@ -9,8 +9,13 @@ export class MainMenu extends React.Component {
     }
 
     sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
+        if (document.getElementById("send_button")?.classList.contains("not-interactable")) {
+            console.log("Send button is not interactable");
+            event.preventDefault();
+            return;
+        }
         console.log("Upload button clicked");
-        setActiveMenu("success");
+        setActiveMenu("loading");
     }
 
     openGallery(event: React.MouseEvent<HTMLAnchorElement>) {

@@ -189,6 +189,9 @@
   .row-2 {
     grid-row: 2;
   }
+  .row-3 {
+    grid-row: 3;
+  }
   .row-6 {
     grid-row: 6;
   }
@@ -219,12 +222,6 @@
   .m-8 {
     margin: calc(var(--spacing) * 8);
   }
-  .mx-8 {
-    margin-inline: calc(var(--spacing) * 8);
-  }
-  .my-\[15vh\] {
-    margin-block: 15vh;
-  }
   .mr-2 {
     margin-right: calc(var(--spacing) * 2);
   }
@@ -246,9 +243,6 @@
   .hidden {
     display: none;
   }
-  .table {
-    display: table;
-  }
   .aspect-4\/5 {
     aspect-ratio: 4/5;
   }
@@ -267,14 +261,8 @@
   .max-w-sm {
     max-width: var(--container-sm);
   }
-  .border-collapse {
-    border-collapse: collapse;
-  }
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
-  }
-  .resize {
-    resize: both;
   }
   .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -287,6 +275,9 @@
   }
   .grid-rows-2 {
     grid-template-rows: repeat(2, minmax(0, 1fr));
+  }
+  .grid-rows-3 {
+    grid-template-rows: repeat(3, minmax(0, 1fr));
   }
   .grid-rows-6 {
     grid-template-rows: repeat(6, minmax(0, 1fr));
@@ -327,10 +318,6 @@
   .rounded-xl {
     border-radius: var(--radius-xl);
   }
-  .border {
-    border-style: var(--tw-border-style);
-    border-width: 1px;
-  }
   .object-contain {
     object-fit: contain;
   }
@@ -342,13 +329,6 @@
   }
   .align-middle {
     vertical-align: middle;
-  }
-  .underline {
-    text-decoration-line: underline;
-  }
-  .outline {
-    outline-style: var(--tw-outline-style);
-    outline-width: 1px;
   }
   .md\:row-2 {
     @media (width >= 48rem) {
@@ -437,7 +417,7 @@
   opacity: 1;
 }
 .not-interactable {
-  opacity: 0.75;
+  opacity: 0.5;
 }
 .button .main-text {
   font-size: 1.5rem;
@@ -453,6 +433,33 @@ body {
 .icon .image {
   width: 40px;
   height: 40px;
+}
+.loading_anim {
+  width: 60px;
+  height: 60px;
+  animation: spin 2s reverse linear infinite;
+}
+.fade-in {
+  animation: fadeIn 0.5s forwards;
+}
+.fade-out {
+  animation: fadeOut 0.5s forwards;
+}
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @property --tw-rotate-x {
   syntax: "*";
@@ -474,15 +481,10 @@ body {
   syntax: "*";
   inherits: false;
 }
-@property --tw-border-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
-}
-@property --tw-outline-style {
-  syntax: "*";
-  inherits: false;
-  initial-value: solid;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 @layer properties {
   @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
@@ -492,8 +494,6 @@ body {
       --tw-rotate-z: initial;
       --tw-skew-x: initial;
       --tw-skew-y: initial;
-      --tw-border-style: solid;
-      --tw-outline-style: solid;
     }
   }
 }
