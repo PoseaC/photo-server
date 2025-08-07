@@ -4,6 +4,7 @@
 :root {
   --dark-color: #748daea9;
   --light-color: #FFEAEA;
+  --light-color-2: #F5CBCB;
   --accent-color: #9ECAD6;
 }
 
@@ -26,6 +27,14 @@
 .button {
   background-color: var(--accent-color);
   text-decoration: none;
+  box-shadow: 0 9px var(--light-color-2);
+  transition: 0.2s;
+}
+
+.button:active {
+  background-color: var(--dark-color);
+  box-shadow: 0 5px var(--light-color);
+  transform: translateY(4px);
 }
 
 .interactable {
