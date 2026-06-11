@@ -3,16 +3,33 @@ import * as ReactDOM from "react-dom";
 import { SuccessNotification } from "./success";
 import { MainMenu } from "./mainMenu";
 import { LoadingScreen } from "./loading";
+import { UploadProgress } from "./immich";
 
 // https://html-shark.com/HTML/RomanianSymbols.htm - hex code for Romanian characters
-class Index extends React.Component {
-    state = { activeMenu: "main" };
+
+interface IndexState {
+    activeMenu: string;
+    selectedFiles: File[];
+    uploadProgress: UploadProgress;
+    uploadController: AbortController | null;
+}
+
+class Index extends React.Component<{}, IndexState> {
+    state: IndexState = {
+        activeMenu: "main",
+        selectedFiles: [],
+        uploadProgress: { done: 0, total: 0, currentFileName: "" },
+        uploadController: null,
+    };
 
     static instance: Index | null = null;
 
     constructor(props: any) {
         super(props);
         Index.instance = this;
+        this.setSelectedFiles = this.setSelectedFiles.bind(this);
+        this.setUploadProgress = this.setUploadProgress.bind(this);
+        this.setUploadController = this.setUploadController.bind(this);
     }
 
     static setActiveMenu(menu: string) {
@@ -31,12 +48,37 @@ class Index extends React.Component {
         }, { once: true });
     }
 
+    setSelectedFiles(files: File[]) {
+        this.setState({ selectedFiles: files });
+    }
+
+    setUploadProgress(progress: UploadProgress) {
+        this.setState({ uploadProgress: progress });
+    }
+
+    setUploadController(controller: AbortController | null) {
+        this.setState({ uploadController: controller });
+    }
+
     render(): React.ReactNode {
+        const { activeMenu, selectedFiles, uploadProgress, uploadController } = this.state;
         return (
             <div className="grid grid-cols-1 place-items-center">
-                {this.state.activeMenu === "main" && <MainMenu />}
-                {this.state.activeMenu === "loading" && <LoadingScreen />}
-                {this.state.activeMenu === "success" && <SuccessNotification />}
+                {activeMenu === "main" && (
+                    <MainMenu
+                        selectedFiles={selectedFiles}
+                        setSelectedFiles={this.setSelectedFiles}
+                        setUploadProgress={this.setUploadProgress}
+                        setUploadController={this.setUploadController}
+                    />
+                )}
+                {activeMenu === "loading" && (
+                    <LoadingScreen
+                        progress={uploadProgress}
+                        controller={uploadController}
+                    />
+                )}
+                {activeMenu === "success" && <SuccessNotification />}
             </div>
         );
     }

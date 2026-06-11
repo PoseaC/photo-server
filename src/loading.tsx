@@ -1,28 +1,37 @@
 import * as React from "react";
 import { setActiveMenu } from "./index";
+import { UploadProgress } from "./immich";
 
-export class LoadingScreen extends React.Component {
-    timeoutId: NodeJS.Timeout | null = null;
+interface LoadingScreenProps {
+    progress: UploadProgress;
+    controller: AbortController | null;
+}
 
-    constructor(props: any) {
+export class LoadingScreen extends React.Component<LoadingScreenProps> {
+    constructor(props: LoadingScreenProps) {
         super(props);
-
         this.cancel = this.cancel.bind(this);
-        this.timeoutId = setTimeout(() => {
-            setActiveMenu("success");
-        }, 5000);
     }
 
     cancel(event: React.MouseEvent<HTMLAnchorElement>) {
-        clearTimeout(this.timeoutId!);
+        event.preventDefault();
+        this.props.controller?.abort();
         setActiveMenu("main");
-    };
+    }
 
     render(): React.JSX.Element {
+        const { done, total } = this.props.progress;
+        const counter = total > 0 ? `${done} / ${total}` : "";
         return (
             <div className="place-self-center grid grid-cols-1 grid-rows-3 m-8 gap-2">
                 <h1 className="title font row-1 place-self-center">
                     Se &#xEE;ncarc&#x103; <br/> v&#x103; rug&#x103;m s&#x103; a&#x15F;tepta&#x21B;i!
+                    {counter && (
+                        <>
+                            <br/>
+                            <span className="subtext">{counter}</span>
+                        </>
+                    )}
                 </h1>
 
                 <div className="icon justify-self-center row-2 self-center">

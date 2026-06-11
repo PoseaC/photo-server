@@ -17,8 +17,8 @@ module.exports = {
       ],
     }),
     new webpack.DefinePlugin({
-      __GOOGLE_PHOTOS_SHARE_LINK__: JSON.stringify(process.env.GOOGLE_PHOTOS_SHARE_LINK || ""),
-      __GOOGLE_OAUTH_CLIENT_ID__: JSON.stringify(process.env.GOOGLE_OAUTH_CLIENT_ID || ""),
+      __IMMICH_BASE_URL__: JSON.stringify(process.env.IMMICH_BASE_URL || ""),
+      __IMMICH_SHARE_SLUG__: JSON.stringify(process.env.IMMICH_SHARE_SLUG || ""),
     }),
   ],
   output: {

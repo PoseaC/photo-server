@@ -1,76 +1,102 @@
 import * as React from "react";
 import { setActiveMenu } from "./index";
 import {
-    assertGooglePhotosConfig,
-    GOOGLE_PHOTOS_SHARE_LINK,
-    joinSharedAlbum,
-    requestAccessToken,
-    uploadFilesToAlbum,
-} from "./googlePhotos";
+    ACCEPT_ATTR,
+    IMMICH_SHARE_URL,
+    UploadProgress,
+    assertImmichConfig,
+    fetchShareKey,
+    isSupportedFile,
+    uploadFiles,
+} from "./immich";
 
-export class MainMenu extends React.Component {
-    selectedFiles: File[] = [];
-    constructor(props: any) {
+interface MainMenuProps {
+    selectedFiles: File[];
+    setSelectedFiles: (files: File[]) => void;
+    setUploadProgress: (progress: UploadProgress) => void;
+    setUploadController: (controller: AbortController | null) => void;
+}
+
+export class MainMenu extends React.Component<MainMenuProps> {
+    constructor(props: MainMenuProps) {
         super(props);
         this.sendPhotos = this.sendPhotos.bind(this);
         this.openGallery = this.openGallery.bind(this);
     }
 
     async sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
-        if (document.getElementById("send_button")?.classList.contains("not-interactable")) {
-            console.log("Send button is not interactable");
-            event.preventDefault();
+        event.preventDefault();
+        if (this.props.selectedFiles.length === 0) {
             return;
         }
-        event.preventDefault();
-        console.log("Upload button clicked");
+
+        const controller = new AbortController();
+        this.props.setUploadController(controller);
+        this.props.setUploadProgress({
+            done: 0,
+            total: this.props.selectedFiles.length,
+            currentFileName: "",
+        });
 
         try {
-            assertGooglePhotosConfig();
+            assertImmichConfig();
             setActiveMenu("loading");
 
-            const accessToken = await requestAccessToken();
-            const albumId = await joinSharedAlbum(accessToken);
-            await uploadFilesToAlbum(this.selectedFiles, accessToken, albumId);
+            const key = await fetchShareKey();
+            await uploadFiles(this.props.selectedFiles, key, {
+                onProgress: this.props.setUploadProgress,
+                signal: controller.signal,
+            });
 
-            window.location.assign(GOOGLE_PHOTOS_SHARE_LINK);
+            this.props.setSelectedFiles([]);
+            this.props.setUploadController(null);
+            setActiveMenu("success");
         } catch (error) {
+            this.props.setUploadController(null);
+            if ((error as Error).name === "AbortError") {
+                setActiveMenu("main");
+                return;
+            }
             console.error(error);
             setActiveMenu("main");
-            alert("Upload failed. Please try again.");
+            alert("\u00CEnc\u0103rcarea a e\u015Fuat. V\u0103 rug\u0103m s\u0103 \u00EEncerca\u021Bi din nou.");
         }
     }
 
     openGallery(event: React.MouseEvent<HTMLAnchorElement>) {
         event.preventDefault();
-        if (!GOOGLE_PHOTOS_SHARE_LINK) {
-            alert("Gallery link is not configured.");
+        if (!IMMICH_SHARE_URL) {
+            alert("Galeria nu este configurat\u0103.");
             return;
         }
-        window.location.assign(GOOGLE_PHOTOS_SHARE_LINK);
+        window.location.assign(IMMICH_SHARE_URL);
     }
 
-    selectFiles(event: FileList | null) {
-        if (event && event.length > 0) {
-            this.selectedFiles = Array.from(event);
-            const fileCount = event.length;
-            const selectionCountElement = document.getElementById("selection_count");
-            if (selectionCountElement) {
-                selectionCountElement.textContent = `${fileCount}`;
-            }
+    selectFiles(fileList: FileList | null) {
+        if (!fileList || fileList.length === 0) {
+            this.props.setSelectedFiles([]);
+            return;
+        }
 
-            const sendButton = document.getElementById("send_button");
-            if (sendButton) {
-                sendButton.classList.remove("not-interactable");
-                sendButton.classList.add("interactable");
-            }
-        } else {
-            this.selectedFiles = [];
-            console.log("No files selected");
+        const all = Array.from(fileList);
+        const accepted: File[] = [];
+        const rejected: string[] = [];
+        for (const file of all) {
+            if (isSupportedFile(file)) accepted.push(file);
+            else rejected.push(file.name);
+        }
+
+        this.props.setSelectedFiles(accepted);
+
+        if (rejected.length > 0) {
+            const list = rejected.slice(0, 5).join(", ") + (rejected.length > 5 ? ", ..." : "");
+            alert(`Unele fi\u015Fiere nu sunt acceptate \u015Fi au fost ignorate:\n${list}`);
         }
     }
 
     render(): React.JSX.Element {
+        const count = this.props.selectedFiles.length;
+        const sendInteractable = count > 0;
         return (
             <div className="place-self-center grid grid-cols-1 m-8 md:grid-rows-4 gap-2">
                 <div className="title font md:row-span-3 place-self-center grid grid-cols-1 md:grid-cols-2 grid-rows-6 md:grid-rows-2 mb-4">
@@ -90,7 +116,7 @@ export class MainMenu extends React.Component {
                         </div>
                         <p className="font main-text pl-3 row-1 self-center justify-self-start">Selecteaz&#x103;</p>
                     </label>
-                    <input type="file" id="file-upload" onChange={(event) => this.selectFiles(event.target.files)} multiple hidden accept="image/*, video/*"/>
+                    <input type="file" id="file-upload" onChange={(event) => this.selectFiles(event.target.files)} multiple hidden accept={ACCEPT_ATTR}/>
 
                     <a href="#" onClick={this.openGallery} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
@@ -99,14 +125,14 @@ export class MainMenu extends React.Component {
                         <p className="font main-text pl-3 row-1 self-center justify-self-start">Vezi Galeria</p>
                     </a>
 
-                    <a id="send_button" href="#" onClick={this.sendPhotos} className="button not-interactable w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
+                    <a id="send_button" href="#" onClick={this.sendPhotos} className={`button ${sendInteractable ? "interactable" : "not-interactable"} w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4`}>
                         <div className="icon justify-self-end row-1 mr-2 self-center">
                             <img src="./img/send.svg" alt="" className="image"/>
                         </div>
                         <div className="pl-3 row-1 self-center grid grid-cols-1 grid-rows-2 justify-self-start">
                             <p className="font main-text row-1 self-center justify-self-center">Trimite</p>
                             <div className="font subtext row-2 self-center grid grid-cols-3">
-                                <p id="selection_count" className="col-1 justify-self-auto">0</p>
+                                <p id="selection_count" className="col-1 justify-self-auto">{count}</p>
                                 <p className="col-start-2 col-span-2 justify-self-auto ml-2">fi&#x15F;iere</p>
                             </div>
                         </div>
