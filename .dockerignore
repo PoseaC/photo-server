@@ -1,0 +1,23 @@
+# This file must sit at the build-context root (the project root), because
+# Docker only reads .dockerignore from the context root.
+
+# Dependencies and build output (regenerated inside the image)
+node_modules
+bin
+build
+
+# Version control and local config / secrets
+.git
+.gitignore
+.env
+
+# Docker files (not needed inside the image; Dockerfile is still used to build)
+docker
+
+# Project meta (not needed by the build)
+build_command.txt
+*.md
+LICENSE
+
+# Logs
+npm-debug.log*

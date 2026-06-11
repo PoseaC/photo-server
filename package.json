@@ -5,18 +5,20 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "start": "webpack serve --config webpack.config.js --open",
+    "start": "webpack serve --config webpack.config.js --open --mode development",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.1.11",
     "@types/node": "^24.0.15",
     "copy-webpack-plugin": "^13.0.0",
+    "dotenv": "^17.2.3",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.3",
     "url-loader": "^4.1.1",
     "webpack": "^5.100.2",
-    "webpack-cli": "^6.0.1"
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.3"
   },
   "dependencies": {
     "@types/react": "^17.0.2",

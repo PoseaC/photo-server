@@ -1,29 +1,58 @@
 import * as React from "react";
 import { setActiveMenu } from "./index";
+import {
+    assertGooglePhotosConfig,
+    GOOGLE_PHOTOS_SHARE_LINK,
+    joinSharedAlbum,
+    requestAccessToken,
+    uploadFilesToAlbum,
+} from "./googlePhotos";
 
 export class MainMenu extends React.Component {
+    selectedFiles: File[] = [];
     constructor(props: any) {
         super(props);
         this.sendPhotos = this.sendPhotos.bind(this);
         this.openGallery = this.openGallery.bind(this);
     }
 
-    sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
+    async sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
         if (document.getElementById("send_button")?.classList.contains("not-interactable")) {
             console.log("Send button is not interactable");
             event.preventDefault();
             return;
         }
+        event.preventDefault();
         console.log("Upload button clicked");
-        setActiveMenu("loading");
+
+        try {
+            assertGooglePhotosConfig();
+            setActiveMenu("loading");
+
+            const accessToken = await requestAccessToken();
+            const albumId = await joinSharedAlbum(accessToken);
+            await uploadFilesToAlbum(this.selectedFiles, accessToken, albumId);
+
+            window.location.assign(GOOGLE_PHOTOS_SHARE_LINK);
+        } catch (error) {
+            console.error(error);
+            setActiveMenu("main");
+            alert("Upload failed. Please try again.");
+        }
     }
 
     openGallery(event: React.MouseEvent<HTMLAnchorElement>) {
-        console.log("Open gallery button clicked");
+        event.preventDefault();
+        if (!GOOGLE_PHOTOS_SHARE_LINK) {
+            alert("Gallery link is not configured.");
+            return;
+        }
+        window.location.assign(GOOGLE_PHOTOS_SHARE_LINK);
     }
 
     selectFiles(event: FileList | null) {
         if (event && event.length > 0) {
+            this.selectedFiles = Array.from(event);
             const fileCount = event.length;
             const selectionCountElement = document.getElementById("selection_count");
             if (selectionCountElement) {
@@ -36,6 +65,7 @@ export class MainMenu extends React.Component {
                 sendButton.classList.add("interactable");
             }
         } else {
+            this.selectedFiles = [];
             console.log("No files selected");
         }
     }
@@ -54,7 +84,7 @@ export class MainMenu extends React.Component {
                 </div>
 
                 <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-3 gap-4 align-middle">
-                    <label htmlFor="file-upload" className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
+                    <label htmlFor="file-upload" className="button cursor-pointer w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
                             <img src="./img/camera.svg" alt="" className="image"/>
                         </div>

@@ -1,0 +1,20 @@
+name: photo-server
+
+services:
+  landing-page-wedding-photo-server:
+    # Prebuilt image pulled from the registry. Build it on your PC with buildx
+    # for the Pi's architecture, then `docker compose pull` on the Pi.
+    # Replace "your-github-username" with your GitHub username (lowercase).
+    image: ghcr.io/minculeteandrei/photo-server:latest
+    # Optional: lets you build locally on an x86 machine for testing
+    # (`docker compose up --build`). The Raspberry Pi uses the pulled image.
+    # Paths are relative to this compose file: the build context is the project
+    # root (one level up) so the source is available, and the Dockerfile lives
+    # here in the docker/ folder.
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: landing-page-wedding-photo-server
+    ports:
+      - "8082:80"
+    restart: unless-stopped
