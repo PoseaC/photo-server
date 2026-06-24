@@ -14,6 +14,12 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+      # Public Immich config baked into the bundle at build time. Supply via the
+      # environment (or an env file) when building locally, e.g.:
+      #   docker compose --env-file ../.env build
+      args:
+        IMMICH_BASE_URL: ${IMMICH_BASE_URL:-}
+        IMMICH_SHARE_SLUG: ${IMMICH_SHARE_SLUG:-}
     container_name: landing-page-wedding-photo-server
     ports:
       - "8082:80"

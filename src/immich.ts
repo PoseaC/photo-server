@@ -1,6 +1,10 @@
 /// <reference path="./env.d.ts" />
 
 const IMMICH_BASE_URL = __IMMICH_BASE_URL__.replace(/\/+$/, "");
+// API calls use this base. It equals IMMICH_BASE_URL in production, but is empty
+// (relative path) under the dev server so requests hit the local proxy and avoid
+// CORS. The gallery link below always uses the absolute IMMICH_BASE_URL.
+const IMMICH_API_BASE = __IMMICH_API_BASE__.replace(/\/+$/, "");
 const IMMICH_SHARE_SLUG = __IMMICH_SHARE_SLUG__;
 
 export const IMMICH_SHARE_URL = `${IMMICH_BASE_URL}/s/${IMMICH_SHARE_SLUG}`;
@@ -39,7 +43,7 @@ let cachedShareKey: string | null = null;
 
 export async function fetchShareKey(): Promise<string> {
   if (cachedShareKey) return cachedShareKey;
-  const url = `${IMMICH_BASE_URL}/api/shared-links/me?slug=${encodeURIComponent(IMMICH_SHARE_SLUG)}`;
+  const url = `${IMMICH_API_BASE}/api/shared-links/me?slug=${encodeURIComponent(IMMICH_SHARE_SLUG)}`;
   const response = await fetch(url, { headers: { Accept: "application/json" } });
   if (!response.ok) {
     throw new Error(`Failed to resolve shared link (HTTP ${response.status}).`);
@@ -91,7 +95,7 @@ async function uploadOnce(
   body.append("isFavorite", "false");
   body.append("assetData", file, file.name);
 
-  const url = `${IMMICH_BASE_URL}/api/assets?key=${encodeURIComponent(key)}`;
+  const url = `${IMMICH_API_BASE}/api/assets?key=${encodeURIComponent(key)}`;
   const response = await fetch(url, { method: "POST", body, signal });
   if (response.ok) return; // 200 (duplicate) or 201 (created)
 

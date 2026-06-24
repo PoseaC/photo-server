@@ -58,6 +58,9 @@ export class MainMenu extends React.Component<MainMenuProps> {
                 return;
             }
             console.error(error);
+            this.props.setSelectedFiles([]);
+            const fileInput = document.getElementById("file-upload") as HTMLInputElement | null;
+            if (fileInput) fileInput.value = "";
             setActiveMenu("main");
             alert("\u00CEnc\u0103rcarea a e\u015Fuat. V\u0103 rug\u0103m s\u0103 \u00EEncerca\u021Bi din nou.");
         }
