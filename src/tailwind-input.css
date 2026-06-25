@@ -30,7 +30,6 @@
   box-shadow: 0 9px var(--light-color-2);
   transition: 0.2s;
 }
-
 .button:active {
   background-color: var(--dark-color);
   box-shadow: 0 5px var(--light-color);
@@ -53,6 +52,31 @@
   font-size: 1.25rem;
 }
 
+/* Smaller buttons, text and icons on phones so everything fits without
+   scrolling. Desktop (>= 48rem) keeps the original, larger sizing. */
+@media (width < 48rem) {
+  .title {
+    font-size: 1.25rem;
+  }
+  .button {
+    padding: 0.6rem;
+    box-shadow: 0 6px var(--light-color-2);
+  }
+  .button:active {
+    box-shadow: 0 3px var(--light-color);
+  }
+  .button .main-text {
+    font-size: 1.15rem;
+  }
+  .button .subtext {
+    font-size: 1rem;
+  }
+  .icon .image {
+    width: 28px;
+    height: 28px;
+  }
+}
+
 html,
 body {
   height: 100%;
@@ -62,26 +86,16 @@ body {
   background-image: url(./img/background.svg);
   background-size: cover;
   background-position: center;
-  overflow: hidden;
+  background-attachment: fixed;
 }
 
-/* Fill the visible viewport (dvh accounts for mobile browser chrome). */
+/* Fill at least the visible viewport (dvh accounts for mobile browser chrome),
+   but grow and allow scrolling if the content is taller than the screen. */
 #container {
-  height: 100dvh;
-}
-
-/* Scale-to-fit wrapper so each screen always fits the viewport height on any
-   device. The inner content is measured and scaled down (never up) in JS. */
-.fit-outer {
-  width: 100%;
-  display: grid;
-  justify-items: center;
-  align-items: start;
-  overflow: hidden;
-}
-
-.fit-inner {
-  transform-origin: top center;
+  min-height: 100dvh;
+  height: auto;
+  align-content: center;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* Percentage label centered inside the rotating loading animation. */

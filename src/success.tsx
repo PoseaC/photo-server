@@ -25,7 +25,7 @@ export class SuccessNotification extends React.Component {
 
     render(): React.JSX.Element {
         return (
-            <div className="place-self-center grid grid-cols-1 m-8 gap-2">
+            <div className="place-self-center grid grid-cols-1 mx-2 my-3 md:m-8 gap-2">
                 <h1 className="title font place-self-center mb-4">Mul&#x163;umim pentru contribu&#x163;ie!</h1>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 justify-items-center gap-4">

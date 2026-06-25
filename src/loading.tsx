@@ -23,7 +23,7 @@ export class LoadingScreen extends React.Component<LoadingScreenProps> {
         const { done, total, percent } = this.props.progress;
         const counter = total > 0 ? `${done} / ${total}` : "";
         return (
-            <div className="place-self-center grid grid-cols-1 grid-rows-3 m-8 gap-2">
+            <div className="place-self-center grid grid-cols-1 grid-rows-3 mx-2 my-3 md:m-8 gap-2">
                 <h1 className="title font row-1 place-self-center">
                     Se &#xEE;ncarc&#x103; <br/> v&#x103; rug&#x103;m s&#x103; a&#x15F;tepta&#x21B;i!
                     {counter && (

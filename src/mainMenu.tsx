@@ -111,18 +111,18 @@ export class MainMenu extends React.Component<MainMenuProps> {
         const count = this.props.selectedFiles.length;
         const sendInteractable = count > 0;
         return (
-            <div className="place-self-center grid grid-cols-1 m-8 md:grid-rows-4 gap-2">
-                <div className="title font md:row-span-3 place-self-center grid grid-cols-1 md:grid-cols-2 grid-rows-6 md:grid-rows-2 mb-4">
+            <div className="place-self-center grid grid-cols-1 mx-2 my-3 md:m-8 md:grid-rows-4 gap-2">
+                <div className="title font md:row-span-3 place-self-center grid grid-cols-1 md:grid-cols-2 grid-rows-6 md:grid-rows-2 mb-2 md:mb-4">
                     <h1 className="row-1 md:cols-1 md:self-end md:mb-2 self-center">
                         Alexandra & Iustin <br/> 5 Iulie 2026
                     </h1>
-                    <img src="./img/photograph.jpg" alt="" className="row-span-4 md:row-span-2 md:row-start-1 md:cols-2 row-start-2 aspect-4/5 rounded-xl self-center justify-self-center max-w-[230px] object-contain w-full"/>
+                    <img src="./img/photograph.jpg" alt="" className="row-span-4 md:row-span-2 md:row-start-1 md:cols-2 row-start-2 aspect-4/5 rounded-xl self-center justify-self-center max-w-[150px] md:max-w-[230px] object-contain w-full"/>
                     <h2 className="row-6 md:row-2 md:cols-1 md:self-start self-center">
                         &#xCE;nc&#x103;rca&#x21B;i poze &#x15F;i videoclipuri &#xEE;n <br/> Galeria Invita&#x21B;ilor!
                     </h2>
                 </div>
 
-                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-3 gap-4 align-middle">
+                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-3 gap-2 md:gap-4 align-middle">
                     <label htmlFor="file-upload" className="button cursor-pointer w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
                             <img src="./img/camera.svg" alt="" className="image"/>
