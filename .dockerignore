@@ -11,8 +11,10 @@ build
 .gitignore
 .env
 
-# Docker files (not needed inside the image; Dockerfile is still used to build)
-docker
+# Docker files: keep compose/Dockerfile out of the build context, but the nginx
+# template must remain available for the COPY in the Dockerfile.
+docker/*
+!docker/default.conf.template
 
 # Project meta (not needed by the build)
 build_command.txt

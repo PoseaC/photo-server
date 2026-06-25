@@ -21,6 +21,10 @@ services:
         IMMICH_BASE_URL: ${IMMICH_BASE_URL:-}
         IMMICH_SHARE_SLUG: ${IMMICH_SHARE_SLUG:-}
     container_name: landing-page-wedding-photo-server
+    # Where the container's nginx forwards /api/ (the Immich server). The app is
+    # served same-origin, so the browser never makes a cross-origin call.
+    environment:
+      IMMICH_UPSTREAM: http://192.168.0.139:2283
     ports:
       - "8082:80"
     restart: unless-stopped

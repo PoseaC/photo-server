@@ -3,13 +3,16 @@ const webpack = require('webpack');
 const CopyPlugin = require("copy-webpack-plugin");
 require('dotenv').config();
 
-// Only true while running `webpack serve` (npm start). Used to route Immich API
-// calls through the local dev-server proxy so the browser stays same-origin and
-// avoids CORS. Production builds (Docker) keep calling Immich directly.
+// Only true while running `webpack serve` (npm start). The dev-server proxy
+// below uses it as the Immich target for /api calls.
 const isDevServer = process.env.WEBPACK_SERVE === "true";
 const immichBaseUrl = process.env.IMMICH_BASE_URL || "";
-// In the dev server, API calls use a relative path ("") so they hit the proxy.
-const immichApiBase = isDevServer ? "" : immichBaseUrl;
+// API calls always use a relative path ("/api/...") so they hit a same-origin
+// proxy and avoid cross-origin CORS: the webpack dev-server proxy in
+// development, and the container's nginx "/api -> Immich" proxy in production.
+// The absolute immichBaseUrl is still baked in for the "Vezi Galeria" link.
+const immichApiBase = "";
+void isDevServer;
 
 module.exports = {
   entry: './index.tsx',

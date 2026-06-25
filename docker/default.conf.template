@@ -1,0 +1,35 @@
+# Generated to /etc/nginx/conf.d/default.conf at container startup. The
+# ${IMMICH_UPSTREAM} placeholder is replaced by nginx's envsubst step using the
+# IMMICH_UPSTREAM environment variable. nginx runtime variables ($host, $uri,
+# ...) are left untouched because they are not environment variables.
+
+server {
+    listen       80;
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    # Static app
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Same-origin proxy to Immich. Because the browser calls /api on this same
+    # origin, there is no cross-origin request and therefore no CORS.
+    location /api/ {
+        proxy_pass ${IMMICH_UPSTREAM};
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Allow large video uploads to stream straight through.
+        client_max_body_size    0;
+        proxy_request_buffering  off;
+        proxy_http_version       1.1;
+        proxy_read_timeout       1800s;
+        proxy_send_timeout       1800s;
+    }
+}

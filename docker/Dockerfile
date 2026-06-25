@@ -37,4 +37,11 @@ FROM nginx:alpine
 # Webpack outputs the built site to /app/bin.
 COPY --from=builder /app/bin /usr/share/nginx/html
 
+# Same-origin API proxy: nginx forwards /api/ to Immich so the browser never
+# makes a cross-origin request (no CORS). The ${IMMICH_UPSTREAM} placeholder in
+# the template is substituted at container startup by nginx's envsubst step,
+# so the Immich address can be changed via the environment without rebuilding.
+ENV IMMICH_UPSTREAM=http://192.168.0.139:2283
+COPY docker/default.conf.template /etc/nginx/templates/default.conf.template
+
 EXPOSE 80
