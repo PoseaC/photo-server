@@ -22,6 +22,7 @@ export class MainMenu extends React.Component<MainMenuProps> {
         super(props);
         this.sendPhotos = this.sendPhotos.bind(this);
         this.openGallery = this.openGallery.bind(this);
+        this.clearSelection = this.clearSelection.bind(this);
     }
 
     async sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
@@ -35,6 +36,7 @@ export class MainMenu extends React.Component<MainMenuProps> {
         this.props.setUploadProgress({
             done: 0,
             total: this.props.selectedFiles.length,
+            percent: 0,
             currentFileName: "",
         });
 
@@ -73,6 +75,14 @@ export class MainMenu extends React.Component<MainMenuProps> {
             return;
         }
         window.location.assign(IMMICH_SHARE_URL);
+    }
+
+    clearSelection(event: React.MouseEvent<HTMLAnchorElement>) {
+        event.preventDefault();
+        this.props.setSelectedFiles([]);
+        // Reset the input so re-selecting the same files fires a change event.
+        const fileInput = document.getElementById("file-upload") as HTMLInputElement | null;
+        if (fileInput) fileInput.value = "";
     }
 
     selectFiles(fileList: FileList | null) {
@@ -140,6 +150,15 @@ export class MainMenu extends React.Component<MainMenuProps> {
                             </div>
                         </div>
                     </a>
+
+                    {count > 0 && (
+                        <a href="#" onClick={this.clearSelection} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
+                            <div className="icon justify-self-end row-1 mr-2 self-center">
+                                <img src="./img/cancel.svg" alt="" className="image"/>
+                            </div>
+                            <p className="font main-text pl-3 row-1 self-center justify-self-start">&#x218;terge selec&#x21B;ia</p>
+                        </a>
+                    )}
                 </div>
             </div>
         );

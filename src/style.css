@@ -275,6 +275,9 @@
   .cursor-pointer {
     cursor: pointer;
   }
+  .resize {
+    resize: both;
+  }
   .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
@@ -453,10 +456,38 @@
 .button .subtext {
   font-size: 1.25rem;
 }
+html, body {
+  height: 100%;
+}
 body {
   background-image: url(./img/background.svg);
   background-size: cover;
   background-position: center;
+  overflow: hidden;
+}
+#container {
+  height: 100dvh;
+}
+.fit-outer {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  overflow: hidden;
+}
+.fit-inner {
+  transform-origin: top center;
+}
+.loading-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+.loading-percent {
+  position: absolute;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--light-color);
 }
 .icon .image {
   width: 40px;

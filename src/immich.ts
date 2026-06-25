@@ -81,41 +81,80 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 const MAX_ATTEMPTS = 4;
 const BASE_BACKOFF_MS = 800;
 
-async function uploadOnce(
+function uploadOnce(
   file: File,
   key: string,
   signal?: AbortSignal,
+  onByteProgress?: (loaded: number) => void,
 ): Promise<void> {
-  const created = new Date(file.lastModified || Date.now()).toISOString();
-  const body = new FormData();
-  body.append("deviceAssetId", `${file.name}-${file.size}-${file.lastModified}`);
-  body.append("deviceId", "wedding-web-uploader");
-  body.append("fileCreatedAt", created);
-  body.append("fileModifiedAt", created);
-  body.append("isFavorite", "false");
-  body.append("assetData", file, file.name);
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
 
-  const url = `${IMMICH_API_BASE}/api/assets?key=${encodeURIComponent(key)}`;
-  const response = await fetch(url, { method: "POST", body, signal });
-  if (response.ok) return; // 200 (duplicate) or 201 (created)
+    const created = new Date(file.lastModified || Date.now()).toISOString();
+    const body = new FormData();
+    body.append("deviceAssetId", `${file.name}-${file.size}-${file.lastModified}`);
+    body.append("deviceId", "wedding-web-uploader");
+    body.append("fileCreatedAt", created);
+    body.append("fileModifiedAt", created);
+    body.append("isFavorite", "false");
+    body.append("assetData", file, file.name);
 
-  const text = await response.text().catch(() => "");
-  const err = new Error(
-    `Upload failed (HTTP ${response.status}) for ${file.name}: ${text.slice(0, 200)}`,
-  );
-  (err as Error & { status?: number }).status = response.status;
-  throw err;
+    // XMLHttpRequest (not fetch) is used so we can report upload progress
+    // events, which fetch does not expose for request bodies.
+    const xhr = new XMLHttpRequest();
+    const url = `${IMMICH_API_BASE}/api/assets?key=${encodeURIComponent(key)}`;
+    xhr.open("POST", url);
+
+    const onAbort = () => xhr.abort();
+    const cleanup = () => signal?.removeEventListener("abort", onAbort);
+    signal?.addEventListener("abort", onAbort, { once: true });
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onByteProgress?.(event.loaded);
+    };
+
+    xhr.onload = () => {
+      cleanup();
+      if (xhr.status >= 200 && xhr.status < 300) {
+        onByteProgress?.(file.size); // 200 (duplicate) or 201 (created)
+        resolve();
+        return;
+      }
+      const err = new Error(
+        `Upload failed (HTTP ${xhr.status}) for ${file.name}: ${String(xhr.responseText).slice(0, 200)}`,
+      );
+      (err as Error & { status?: number }).status = xhr.status;
+      reject(err);
+    };
+
+    xhr.onerror = () => {
+      cleanup();
+      reject(new Error(`Network error while uploading ${file.name}.`));
+    };
+
+    xhr.onabort = () => {
+      cleanup();
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+
+    xhr.send(body);
+  });
 }
 
 async function uploadWithRetry(
   file: File,
   key: string,
   signal?: AbortSignal,
+  onByteProgress?: (loaded: number) => void,
 ): Promise<void> {
   let lastErr: unknown;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      await uploadOnce(file, key, signal);
+      onByteProgress?.(0); // reset this file's progress at the start of each attempt
+      await uploadOnce(file, key, signal, onByteProgress);
       return;
     } catch (err) {
       if (signal?.aborted) throw err;
@@ -134,8 +173,14 @@ async function uploadWithRetry(
 export interface UploadProgress {
   done: number;
   total: number;
+  percent: number;
   currentFileName: string;
 }
+
+// Number of files uploaded in parallel. A small pool fills a high-latency link
+// (e.g. a tunnel) better than a single stream, matching Immich's own web
+// uploader. Kept low so many simultaneous guests don't overwhelm the server.
+const UPLOAD_CONCURRENCY = 3;
 
 export async function uploadFiles(
   files: File[],
@@ -143,12 +188,44 @@ export async function uploadFiles(
   options: { onProgress?: (p: UploadProgress) => void; signal?: AbortSignal } = {},
 ): Promise<void> {
   const { onProgress, signal } = options;
-  if (files.length === 0) throw new Error("No files selected.");
-  for (let i = 0; i < files.length; i++) {
-    if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-    const file = files[i];
-    onProgress?.({ done: i, total: files.length, currentFileName: file.name });
-    await uploadWithRetry(file, key, signal);
-  }
-  onProgress?.({ done: files.length, total: files.length, currentFileName: "" });
+  const total = files.length;
+  if (total === 0) throw new Error("No files selected.");
+
+  // Byte-based progress: percent reflects bytes sent across all files, so a
+  // single large file shows smooth progress instead of jumping 0% -> 100%.
+  const totalBytes = files.reduce((sum, f) => sum + f.size, 0) || 1;
+  const loadedPerFile = new Array<number>(total).fill(0);
+
+  let done = 0;
+  let nextIndex = 0;
+  let lastStartedName = "";
+
+  const report = () => {
+    const loaded = loadedPerFile.reduce((a, b) => a + b, 0);
+    const percent = Math.min(100, Math.round((loaded / totalBytes) * 100));
+    onProgress?.({ done, total, percent, currentFileName: lastStartedName });
+  };
+
+  const worker = async (): Promise<void> => {
+    while (true) {
+      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+      const index = nextIndex++;
+      if (index >= total) return;
+      const file = files[index];
+      lastStartedName = file.name;
+      report();
+      await uploadWithRetry(file, key, signal, (loaded) => {
+        loadedPerFile[index] = Math.min(loaded, file.size);
+        report();
+      });
+      loadedPerFile[index] = file.size;
+      done++;
+      report();
+    }
+  };
+
+  const poolSize = Math.min(UPLOAD_CONCURRENCY, total);
+  await Promise.all(Array.from({ length: poolSize }, () => worker()));
+
+  onProgress?.({ done: total, total, percent: 100, currentFileName: "" });
 }

@@ -53,10 +53,49 @@
   font-size: 1.25rem;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   background-image: url(./img/background.svg);
   background-size: cover;
   background-position: center;
+  overflow: hidden;
+}
+
+/* Fill the visible viewport (dvh accounts for mobile browser chrome). */
+#container {
+  height: 100dvh;
+}
+
+/* Scale-to-fit wrapper so each screen always fits the viewport height on any
+   device. The inner content is measured and scaled down (never up) in JS. */
+.fit-outer {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  align-items: start;
+  overflow: hidden;
+}
+
+.fit-inner {
+  transform-origin: top center;
+}
+
+/* Percentage label centered inside the rotating loading animation. */
+.loading-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.loading-percent {
+  position: absolute;
+  font-size: 0.95rem;
+  line-height: 1;
+  color: var(--light-color);
 }
 
 .icon .image {

@@ -20,7 +20,7 @@ export class LoadingScreen extends React.Component<LoadingScreenProps> {
     }
 
     render(): React.JSX.Element {
-        const { done, total } = this.props.progress;
+        const { done, total, percent } = this.props.progress;
         const counter = total > 0 ? `${done} / ${total}` : "";
         return (
             <div className="place-self-center grid grid-cols-1 grid-rows-3 m-8 gap-2">
@@ -35,7 +35,10 @@ export class LoadingScreen extends React.Component<LoadingScreenProps> {
                 </h1>
 
                 <div className="icon justify-self-center row-2 self-center">
-                    <img src="./img/loading.svg" alt="" className="loading_anim" />
+                    <div className="loading-wrap">
+                        <img src="./img/loading.svg" alt="" className="loading_anim" />
+                        <span className="loading-percent font">{percent}%</span>
+                    </div>
                 </div>
 
                 <a href="#" onClick={this.cancel} className="button row-3 w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
