@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Montserrat:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -9,11 +9,17 @@
 }
 
 .font {
-  font-family: "Alex Brush", cursive;
-  font-weight: 400;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
   font-style: normal;
   text-align: center;
   color: var(--light-color);
+}
+
+/* Decorative script font, used only for the top-most title (the couple's names). */
+.script {
+  font-family: "Alex Brush", cursive;
+  font-weight: 400;
 }
 
 #main {
