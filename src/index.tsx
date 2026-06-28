@@ -63,7 +63,7 @@ class Index extends React.Component<{}, IndexState> {
     render(): React.ReactNode {
         const { activeMenu, selectedFiles, uploadProgress, uploadController } = this.state;
         return (
-            <div className="grid grid-cols-1 place-items-center">
+            <div className="grid grid-cols-1 place-items-center mx-4">
                 {activeMenu === "main" && (
                     <MainMenu
                         selectedFiles={selectedFiles}

@@ -20,14 +20,12 @@ interface MainMenuProps {
 export class MainMenu extends React.Component<MainMenuProps> {
     constructor(props: MainMenuProps) {
         super(props);
-        this.sendPhotos = this.sendPhotos.bind(this);
+        this.startUpload = this.startUpload.bind(this);
         this.openGallery = this.openGallery.bind(this);
-        this.clearSelection = this.clearSelection.bind(this);
     }
 
-    async sendPhotos(event: React.MouseEvent<HTMLAnchorElement>) {
-        event.preventDefault();
-        if (this.props.selectedFiles.length === 0) {
+    async startUpload(files: File[]) {
+        if (files.length === 0) {
             return;
         }
 
@@ -35,7 +33,7 @@ export class MainMenu extends React.Component<MainMenuProps> {
         this.props.setUploadController(controller);
         this.props.setUploadProgress({
             done: 0,
-            total: this.props.selectedFiles.length,
+            total: files.length,
             percent: 0,
             currentFileName: "",
         });
@@ -45,7 +43,7 @@ export class MainMenu extends React.Component<MainMenuProps> {
             setActiveMenu("loading");
 
             const key = await fetchShareKey();
-            await uploadFiles(this.props.selectedFiles, key, {
+            await uploadFiles(files, key, {
                 onProgress: this.props.setUploadProgress,
                 signal: controller.signal,
             });
@@ -77,14 +75,6 @@ export class MainMenu extends React.Component<MainMenuProps> {
         window.location.assign(IMMICH_SHARE_URL);
     }
 
-    clearSelection(event: React.MouseEvent<HTMLAnchorElement>) {
-        event.preventDefault();
-        this.props.setSelectedFiles([]);
-        // Reset the input so re-selecting the same files fires a change event.
-        const fileInput = document.getElementById("file-upload") as HTMLInputElement | null;
-        if (fileInput) fileInput.value = "";
-    }
-
     selectFiles(fileList: FileList | null) {
         if (!fileList || fileList.length === 0) {
             this.props.setSelectedFiles([]);
@@ -105,11 +95,14 @@ export class MainMenu extends React.Component<MainMenuProps> {
             const list = rejected.slice(0, 5).join(", ") + (rejected.length > 5 ? ", ..." : "");
             alert(`Unele fi\u015Fiere nu sunt acceptate \u015Fi au fost ignorate:\n${list}`);
         }
+
+        // Start uploading immediately once the user finishes selecting files.
+        if (accepted.length > 0) {
+            this.startUpload(accepted);
+        }
     }
 
     render(): React.JSX.Element {
-        const count = this.props.selectedFiles.length;
-        const sendInteractable = count > 0;
         return (
             <div className="place-self-center grid grid-cols-1 mx-2 my-3 md:m-8 md:grid-rows-4 gap-2">
                 <div className="title font md:row-span-3 place-self-center grid grid-cols-1 md:grid-cols-2 grid-rows-6 md:grid-rows-2 mb-2 md:mb-4">
@@ -122,7 +115,7 @@ export class MainMenu extends React.Component<MainMenuProps> {
                     </h2>
                 </div>
 
-                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-3 gap-2 md:gap-4 align-middle">
+                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-2 gap-2 md:gap-4 align-middle">
                     <label htmlFor="file-upload" className="button cursor-pointer w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
                             <img src="./img/camera.svg" alt="" className="image"/>
@@ -137,28 +130,6 @@ export class MainMenu extends React.Component<MainMenuProps> {
                         </div>
                         <p className="font main-text pl-3 row-1 self-center justify-self-start">Vezi Galeria</p>
                     </a>
-
-                    <a id="send_button" href="#" onClick={this.sendPhotos} className={`button ${sendInteractable ? "interactable" : "not-interactable"} w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4`}>
-                        <div className="icon justify-self-end row-1 mr-2 self-center">
-                            <img src="./img/send.svg" alt="" className="image"/>
-                        </div>
-                        <div className="pl-3 row-1 self-center grid grid-cols-1 grid-rows-2 justify-self-start">
-                            <p className="font main-text row-1 self-center justify-self-center">Trimite</p>
-                            <div className="font subtext row-2 self-center grid grid-cols-3">
-                                <p id="selection_count" className="col-1 justify-self-auto">{count}</p>
-                                <p className="col-start-2 col-span-2 justify-self-auto ml-2">fi&#x15F;iere</p>
-                            </div>
-                        </div>
-                    </a>
-
-                    {count > 0 && (
-                        <a href="#" onClick={this.clearSelection} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
-                            <div className="icon justify-self-end row-1 mr-2 self-center">
-                                <img src="./img/cancel.svg" alt="" className="image"/>
-                            </div>
-                            <p className="font main-text pl-3 row-1 self-center justify-self-start">&#x218;terge selec&#x21B;ia</p>
-                        </a>
-                    )}
                 </div>
             </div>
         );
