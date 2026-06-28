@@ -1,7 +1,6 @@
 import * as React from "react";
 import { setActiveMenu } from "./index";
 import {
-    ACCEPT_ATTR,
     IMMICH_SHARE_URL,
     UploadProgress,
     assertImmichConfig,
@@ -109,20 +108,20 @@ export class MainMenu extends React.Component<MainMenuProps> {
                     <h1 className="row-1 md:cols-1 md:self-end md:mb-2 self-center">
                         Alexandra & Iustin <br/> 5 Iulie 2026
                     </h1>
-                    <img src="./img/photograph.jpg" alt="" className="row-span-4 md:row-span-2 md:row-start-1 md:cols-2 row-start-2 aspect-4/5 rounded-xl self-center justify-self-center max-w-[150px] md:max-w-[230px] object-contain w-full"/>
+                    <img src="./img/photograph.jpg" alt="" className="row-span-4 md:row-span-2 md:row-start-1 md:cols-2 row-start-2 aspect-4/5 rounded-xl self-center justify-self-center max-w-[180px] md:max-w-[230px] object-contain w-full"/>
                     <h2 className="row-6 md:row-2 md:cols-1 md:self-start self-center">
                         &#xCE;nc&#x103;rca&#x21B;i poze &#x15F;i videoclipuri &#xEE;n <br/> Galeria Invita&#x21B;ilor!
                     </h2>
                 </div>
 
-                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-2 gap-2 md:gap-4 align-middle">
+                <div className="md:row-4 grid grid-cols-1 justify-items-center md:grid-cols-2 gap-4 mb-2 align-middle">
                     <label htmlFor="file-upload" className="button cursor-pointer w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
                             <img src="./img/camera.svg" alt="" className="image"/>
                         </div>
                         <p className="font main-text pl-3 row-1 self-center justify-self-start">Selecteaz&#x103;</p>
                     </label>
-                    <input type="file" id="file-upload" onChange={(event) => this.selectFiles(event.target.files)} multiple hidden accept={ACCEPT_ATTR}/>
+                    <input type="file" id="file-upload" onChange={(event) => this.selectFiles(event.target.files)} multiple hidden accept="image/*,video/*"/>
 
                     <a href="#" onClick={this.openGallery} className="button w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
                         <div className="icon justify-self-end row-1 mr-2 self-center">
