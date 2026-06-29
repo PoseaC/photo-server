@@ -55,8 +55,29 @@ export async function fetchShareKey(): Promise<string> {
 }
 
 // Network errors and 5xx/429 are retryable; 4xx (other) are not.
-function isRetryableHttpError(status: number): boolean {
+export function isRetryableHttpError(status: number): boolean {
   return status === 429 || (status >= 500 && status <= 599);
+}
+
+// Builds the multipart body for a single asset upload. Shared between the
+// in-page XHR uploader and the service-worker fetch uploader so both send an
+// identical request shape (and the same deviceAssetId, which Immich uses for
+// idempotent de-duplication).
+export function buildUploadFormData(file: File): FormData {
+  const created = new Date(file.lastModified || Date.now()).toISOString();
+  const body = new FormData();
+  body.append("deviceAssetId", `${file.name}-${file.size}-${file.lastModified}`);
+  body.append("deviceId", "wedding-web-uploader");
+  body.append("fileCreatedAt", created);
+  body.append("fileModifiedAt", created);
+  body.append("isFavorite", "false");
+  body.append("assetData", file, file.name);
+  return body;
+}
+
+// The Immich upload endpoint for a given public share key.
+export function assetsUploadUrl(key: string): string {
+  return `${IMMICH_API_BASE}/api/assets?key=${encodeURIComponent(key)}`;
 }
 
 function sleep(ms: number, signal?: AbortSignal): Promise<void> {
@@ -78,8 +99,8 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-const MAX_ATTEMPTS = 4;
-const BASE_BACKOFF_MS = 800;
+export const MAX_ATTEMPTS = 4;
+export const BASE_BACKOFF_MS = 800;
 
 function uploadOnce(
   file: File,
@@ -93,20 +114,12 @@ function uploadOnce(
       return;
     }
 
-    const created = new Date(file.lastModified || Date.now()).toISOString();
-    const body = new FormData();
-    body.append("deviceAssetId", `${file.name}-${file.size}-${file.lastModified}`);
-    body.append("deviceId", "wedding-web-uploader");
-    body.append("fileCreatedAt", created);
-    body.append("fileModifiedAt", created);
-    body.append("isFavorite", "false");
-    body.append("assetData", file, file.name);
+    const body = buildUploadFormData(file);
 
     // XMLHttpRequest (not fetch) is used so we can report upload progress
     // events, which fetch does not expose for request bodies.
     const xhr = new XMLHttpRequest();
-    const url = `${IMMICH_API_BASE}/api/assets?key=${encodeURIComponent(key)}`;
-    xhr.open("POST", url);
+    xhr.open("POST", assetsUploadUrl(key));
 
     const onAbort = () => xhr.abort();
     const cleanup = () => signal?.removeEventListener("abort", onAbort);

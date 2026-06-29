@@ -15,7 +15,12 @@ const immichApiBase = "";
 void isDevServer;
 
 module.exports = {
-  entry: './index.tsx',
+  entry: {
+    index: './index.tsx',
+    // Built as a separate top-level file (bin/sw.js) so it is served at the
+    // site root and its service-worker scope covers the whole app.
+    sw: './sw.ts',
+  },
   context: path.resolve(__dirname, 'src'),
   plugins: [
     new CopyPlugin({
@@ -34,7 +39,7 @@ module.exports = {
     }),
   ],
   output: {
-    filename: 'index.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'bin'),
   },
   module: {

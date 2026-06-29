@@ -55,6 +55,8 @@ src/
   loading.tsx        # Upload progress screen (% label + cancel)
   success.tsx        # "Mulțumim" screen + gallery button
   immich.ts          # All Immich API logic (share key, upload, validation)
+  sw.ts              # Background-upload service worker (built to bin/sw.js)
+  uploadManager.ts   # Page<->service-worker bridge (register/enqueue/progress/cancel)
   env.d.ts           # Ambient declarations for __IMMICH_*__ build-time globals
   index.html         # HTML shell (viewport meta, vendor scripts)
   tailwind-input.css # Tailwind source + custom CSS
@@ -103,6 +105,40 @@ on transition — do NOT store upload state on a child component or it is lost.
 - The file `<input>` uses `accept="image/*,video/*"` (NOT the long extension list)
   so mobile opens the photo gallery directly instead of a document/Drive picker.
   iOS still shows a small action sheet — that is unavoidable for a web file input.
+
+## Background uploads (service worker)
+
+Selecting many assets can take a while to upload, so the upload work runs in a
+**service worker** (`src/sw.ts`, built to `bin/sw.js`) instead of on the page.
+This lets uploads keep going when the guest backgrounds the tab, locks the
+phone, or closes the screen.
+
+- `src/uploadManager.ts` is the page<->worker bridge: it registers the worker,
+  hands off the selected `File[]` + share `key` via `postMessage`, relays the
+  worker's progress/done/error/cancel messages to React, and on load calls
+  `requestUploadStatus()` so a reopened page can re-attach to an in-progress
+  upload.
+- The worker persists each file in **IndexedDB** (`wedding-uploads` DB), so the
+  queue survives a page reload or the worker being killed/restarted. It uploads
+  with the same concurrency (`UPLOAD_CONCURRENCY = 3`) + retry/backoff as the
+  in-page uploader, reusing `buildUploadFormData`/`assetsUploadUrl` from
+  `immich.ts`.
+- `event.waitUntil(...)` keeps the worker alive while uploads are in flight (so
+  they continue after the page closes); a best-effort **Background Sync**
+  registration (`wedding-upload-sync`) is used to resume after the worker is
+  killed where supported.
+- The worker uses `fetch` (XMLHttpRequest is unavailable in workers), which
+  cannot report request-body byte progress, so the worker's percentage is
+  **file-count based** (bytes of COMPLETED files). The in-page fallback keeps the
+  smooth byte-level progress.
+- **Fallback:** when service workers are unavailable (insecure context / old
+  browser), `MainMenu.startUpload` falls back to the original in-page
+  `uploadFiles` flow with an `AbortController`. `LoadingScreen.cancel` aborts the
+  controller in that case, or calls `cancelBackgroundUpload()` in worker mode.
+- **Cancel** clears the worker's IndexedDB queue (so a cancelled batch is not
+  resumed later) but the page keeps the file selection for an easy retry.
+- Webpack has a second entry (`sw: './sw.ts'`) and emits `[name].js`, so the
+  worker is a top-level `bin/sw.js` served at the site root with scope `/`.
 
 ## Configuration (build-time, NOT runtime for the bundle)
 
