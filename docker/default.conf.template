@@ -10,6 +10,14 @@ server {
     root   /usr/share/nginx/html;
     index  index.html;
 
+    # The upload service worker controls the whole site, so its script must not
+    # be served from a stale cache — always revalidate it so guests pick up new
+    # worker versions promptly after a redeploy.
+    location = /sw.js {
+        add_header Cache-Control "no-cache";
+        try_files $uri =404;
+    }
+
     # Static app
     location / {
         try_files $uri $uri/ /index.html;
