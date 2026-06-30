@@ -8,6 +8,7 @@ import {
     isSupportedFile,
     uploadFiles,
 } from "./immich";
+import { backgroundUploadSupported, startBackgroundUpload } from "./uploadManager";
 
 interface MainMenuProps {
     selectedFiles: File[];
@@ -28,8 +29,6 @@ export class MainMenu extends React.Component<MainMenuProps> {
             return;
         }
 
-        const controller = new AbortController();
-        this.props.setUploadController(controller);
         this.props.setUploadProgress({
             done: 0,
             total: files.length,
@@ -39,9 +38,25 @@ export class MainMenu extends React.Component<MainMenuProps> {
 
         try {
             assertImmichConfig();
-            setActiveMenu("loading");
-
             const key = await fetchShareKey();
+
+            // Preferred path: hand the files to the service worker so the upload
+            // keeps running if the guest backgrounds the tab or closes it. The
+            // completion/error/cancel transitions are driven by the worker's
+            // messages (handled in Index), so we just show the loading screen.
+            if (backgroundUploadSupported()) {
+                const started = await startBackgroundUpload(files, key);
+                if (started) {
+                    this.props.setUploadController(null);
+                    setActiveMenu("loading");
+                    return;
+                }
+            }
+
+            // Fallback: upload in the page (no service worker available).
+            const controller = new AbortController();
+            this.props.setUploadController(controller);
+            setActiveMenu("loading");
             await uploadFiles(files, key, {
                 onProgress: this.props.setUploadProgress,
                 signal: controller.signal,

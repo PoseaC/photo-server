@@ -1,6 +1,7 @@
 import * as React from "react";
 import { setActiveMenu } from "./index";
 import { UploadProgress } from "./immich";
+import { cancelBackgroundUpload } from "./uploadManager";
 
 interface LoadingScreenProps {
     progress: UploadProgress;
@@ -15,7 +16,13 @@ export class LoadingScreen extends React.Component<LoadingScreenProps> {
 
     cancel(event: React.MouseEvent<HTMLAnchorElement>) {
         event.preventDefault();
-        this.props.controller?.abort();
+        if (this.props.controller) {
+            // In-page (fallback) upload.
+            this.props.controller.abort();
+        } else {
+            // Background (service worker) upload.
+            cancelBackgroundUpload();
+        }
         setActiveMenu("main");
     }
 
