@@ -104,20 +104,6 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-/* Percentage label centered inside the rotating loading animation. */
-.loading-wrap {
-  position: relative;
-  display: inline-grid;
-  place-items: center;
-}
-
-.loading-percent {
-  position: absolute;
-  font-size: 0.95rem;
-  line-height: 1;
-  color: var(--light-color);
-}
-
 .icon .image {
   width: 40px;
   height: 40px;

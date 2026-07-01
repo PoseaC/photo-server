@@ -6,6 +6,7 @@ import { cancelBackgroundUpload } from "./uploadManager";
 interface LoadingScreenProps {
     progress: UploadProgress;
     controller: AbortController | null;
+    cancellable: boolean;
 }
 
 export class LoadingScreen extends React.Component<LoadingScreenProps> {
@@ -16,6 +17,10 @@ export class LoadingScreen extends React.Component<LoadingScreenProps> {
 
     cancel(event: React.MouseEvent<HTMLAnchorElement>) {
         event.preventDefault();
+        if (!this.props.cancellable) {
+            // Upload not registered yet; ignore taps during the race window.
+            return;
+        }
         if (this.props.controller) {
             // In-page (fallback) upload.
             this.props.controller.abort();
@@ -27,7 +32,7 @@ export class LoadingScreen extends React.Component<LoadingScreenProps> {
     }
 
     render(): React.JSX.Element {
-        const { done, total, percent } = this.props.progress;
+        const { done, total } = this.props.progress;
         const counter = total > 0 ? `${done} / ${total}` : "";
         return (
             <div className="place-self-center grid grid-cols-1 grid-rows-3 mx-2 my-3 md:m-8 gap-2">
@@ -42,13 +47,20 @@ export class LoadingScreen extends React.Component<LoadingScreenProps> {
                 </h1>
 
                 <div className="icon justify-self-center row-2 self-center">
-                    <div className="loading-wrap">
-                        <img src="./img/loading.svg" alt="" className="loading_anim" />
-                        <span className="loading-percent font">{percent}%</span>
-                    </div>
+                    <img src="./img/loading.svg" alt="" className="loading_anim" />
                 </div>
 
-                <a href="#" onClick={this.cancel} className="button row-3 w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4">
+                <a
+                    href="#"
+                    onClick={this.cancel}
+                    aria-disabled={!this.props.cancellable}
+                    style={
+                        this.props.cancellable
+                            ? undefined
+                            : { opacity: 0.5, pointerEvents: "none", cursor: "not-allowed" }
+                    }
+                    className="button row-3 w-full max-w-sm align-middle grid grid-rows-1 rounded-xl p-4"
+                >
                     <div className="icon justify-self-end row-1 mr-3 self-center">
                         <img src="./img/cancel.svg" alt="" className="image" />
                     </div>

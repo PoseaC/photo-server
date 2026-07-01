@@ -5,6 +5,7 @@
 // page re-attach to an upload that is already in progress.
 
 import { UploadProgress } from "./immich";
+import { addRecords } from "./uploadQueue";
 
 export interface UploadCallbacks {
   onProgress?: (progress: UploadProgress) => void;
@@ -72,13 +73,25 @@ async function activeWorker(): Promise<ServiceWorker | null> {
   return registration.active || navigator.serviceWorker.controller;
 }
 
-// Hands the selected files to the worker. Returns false if no worker is
-// available so the caller can fall back to the in-page uploader.
+// Persists the selected files, then asks the worker to start uploading.
+//
+// The files are written to IndexedDB HERE, on the page, because a File from an
+// <input> is only reliably readable in the document that owns it. Persisting it
+// in the worker (after a postMessage transfer) intermittently fails on Android
+// with "DataError: Failed to write blobs (InvalidBlob)". If persistence still
+// fails, we return false so the caller falls back to the in-page uploader,
+// which reads the File directly (no IndexedDB) — the upload always proceeds.
 export async function startBackgroundUpload(files: File[], key: string): Promise<boolean> {
   const worker = await activeWorker();
   if (!worker) return false;
   attachListener();
-  worker.postMessage({ type: "enqueue", files, key });
+  try {
+    await addRecords(files, key);
+  } catch (err) {
+    console.error("Persisting upload queue failed; falling back to in-page upload", err);
+    return false;
+  }
+  worker.postMessage({ type: "process" });
   return true;
 }
 

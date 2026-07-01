@@ -29,6 +29,7 @@ import {
   MAX_ATTEMPTS,
   BASE_BACKOFF_MS,
 } from "./immich";
+import { QueueRecord, getAllRecords, markDone, clearAll } from "./uploadQueue";
 
 // The service-worker global scope is not in the project's TS lib set, so we
 // access worker-only APIs (clients, registration.sync, skipWaiting, ...)
@@ -36,111 +37,14 @@ import {
 // conflicts with the "dom" lib used by the rest of the app).
 const sw = self as unknown as any;
 
-const DB_NAME = "wedding-uploads";
-const STORE = "queue";
 const SYNC_TAG = "wedding-upload-sync";
 
 // Number of files uploaded in parallel. Kept low (matching the in-page
 // uploader) so many simultaneous guests don't overwhelm the server.
 const UPLOAD_CONCURRENCY = 3;
 
-interface QueueRecord {
-  id?: number;
-  name: string;
-  size: number;
-  key: string;
-  file: File;
-  done: 0 | 1;
-}
-
-// ---------------------------------------------------------------------------
-// IndexedDB persistence
-// ---------------------------------------------------------------------------
-
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
-function awaitTx(tx: IDBTransaction): Promise<void> {
-  return new Promise((resolve, reject) => {
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-    tx.onabort = () => reject(tx.error);
-  });
-}
-
-async function addRecords(files: File[], key: string): Promise<void> {
-  const db = await openDb();
-  try {
-    const tx = db.transaction(STORE, "readwrite");
-    const store = tx.objectStore(STORE);
-    for (const file of files) {
-      const record: QueueRecord = { name: file.name, size: file.size, key, file, done: 0 };
-      store.add(record);
-    }
-    await awaitTx(tx);
-  } finally {
-    db.close();
-  }
-}
-
-async function getAllRecords(): Promise<QueueRecord[]> {
-  const db = await openDb();
-  try {
-    const tx = db.transaction(STORE, "readonly");
-    const req = tx.objectStore(STORE).getAll();
-    return await new Promise<QueueRecord[]>((resolve, reject) => {
-      req.onsuccess = () => resolve((req.result || []) as QueueRecord[]);
-      req.onerror = () => reject(req.error);
-    });
-  } finally {
-    db.close();
-  }
-}
-
-async function markDone(id: number): Promise<void> {
-  const db = await openDb();
-  try {
-    const tx = db.transaction(STORE, "readwrite");
-    const store = tx.objectStore(STORE);
-    const getReq = store.get(id);
-    await new Promise<void>((resolve, reject) => {
-      getReq.onsuccess = () => {
-        const record = getReq.result as QueueRecord | undefined;
-        if (record) {
-          record.done = 1;
-          store.put(record);
-        }
-        resolve();
-      };
-      getReq.onerror = () => reject(getReq.error);
-    });
-    await awaitTx(tx);
-  } finally {
-    db.close();
-  }
-}
-
-async function clearAll(): Promise<void> {
-  const db = await openDb();
-  try {
-    const tx = db.transaction(STORE, "readwrite");
-    tx.objectStore(STORE).clear();
-    await awaitTx(tx);
-  } finally {
-    db.close();
-  }
-}
+// The queue is persisted in IndexedDB (see src/uploadQueue.ts). Records are
+// WRITTEN from the page; the worker only reads/updates/clears them here.
 
 // ---------------------------------------------------------------------------
 // Messaging
@@ -306,12 +210,13 @@ sw.addEventListener("activate", (event: any) => {
 sw.addEventListener("message", (event: any) => {
   const data = event.data || {};
   switch (data.type) {
-    case "enqueue":
+    case "process":
+      // The page has already persisted the selected files to IndexedDB. We
+      // only need to (best-effort) register a Background Sync — which lets the
+      // browser wake the worker to finish if it is killed mid-upload — and
+      // start draining the queue.
       event.waitUntil(
         (async () => {
-          await addRecords(data.files as File[], data.key as string);
-          // Best-effort: lets the browser wake the worker to finish if it is
-          // killed before the upload completes. Not supported everywhere.
           try {
             await sw.registration.sync.register(SYNC_TAG);
           } catch (_) {

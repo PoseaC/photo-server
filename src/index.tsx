@@ -17,6 +17,7 @@ interface IndexState {
     selectedFiles: File[];
     uploadProgress: UploadProgress;
     uploadController: AbortController | null;
+    uploadCancellable: boolean;
 }
 
 class Index extends React.Component<{}, IndexState> {
@@ -25,6 +26,7 @@ class Index extends React.Component<{}, IndexState> {
         selectedFiles: [],
         uploadProgress: { done: 0, total: 0, percent: 0, currentFileName: "" },
         uploadController: null,
+        uploadCancellable: false,
     };
 
     static instance: Index | null = null;
@@ -39,6 +41,7 @@ class Index extends React.Component<{}, IndexState> {
         this.setSelectedFiles = this.setSelectedFiles.bind(this);
         this.setUploadProgress = this.setUploadProgress.bind(this);
         this.setUploadController = this.setUploadController.bind(this);
+        this.setUploadCancellable = this.setUploadCancellable.bind(this);
     }
 
     componentDidMount() {
@@ -47,7 +50,9 @@ class Index extends React.Component<{}, IndexState> {
         // visit. MainMenu only kicks the upload off.
         setUploadCallbacks({
             onProgress: (progress) => {
-                this.setState({ uploadProgress: progress });
+                // A progress message means the upload is live in the worker, so
+                // cancelling is safe (also covers resuming after a reload).
+                this.setState({ uploadProgress: progress, uploadCancellable: true });
                 if (this.state.activeMenu === "main" && !this.resumeTriggered && progress.done < progress.total) {
                     this.resumeTriggered = true;
                     Index.setActiveMenu("loading");
@@ -108,8 +113,12 @@ class Index extends React.Component<{}, IndexState> {
         this.setState({ uploadController: controller });
     }
 
+    setUploadCancellable(cancellable: boolean) {
+        this.setState({ uploadCancellable: cancellable });
+    }
+
     render(): React.ReactNode {
-        const { activeMenu, selectedFiles, uploadProgress, uploadController } = this.state;
+        const { activeMenu, selectedFiles, uploadProgress, uploadController, uploadCancellable } = this.state;
         return (
             <div className="grid grid-cols-1 place-items-center mx-4">
                 {activeMenu === "main" && (
@@ -118,12 +127,14 @@ class Index extends React.Component<{}, IndexState> {
                         setSelectedFiles={this.setSelectedFiles}
                         setUploadProgress={this.setUploadProgress}
                         setUploadController={this.setUploadController}
+                        setUploadCancellable={this.setUploadCancellable}
                     />
                 )}
                 {activeMenu === "loading" && (
                     <LoadingScreen
                         progress={uploadProgress}
                         controller={uploadController}
+                        cancellable={uploadCancellable}
                     />
                 )}
                 {activeMenu === "success" && <SuccessNotification />}

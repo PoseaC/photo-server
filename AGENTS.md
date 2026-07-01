@@ -56,7 +56,8 @@ src/
   success.tsx        # "Mulțumim" screen + gallery button
   immich.ts          # All Immich API logic (share key, upload, validation)
   sw.ts              # Background-upload service worker (built to bin/sw.js)
-  uploadManager.ts   # Page<->service-worker bridge (register/enqueue/progress/cancel)
+  uploadManager.ts   # Page<->service-worker bridge (persist queue/process/progress/cancel)
+  uploadQueue.ts     # Shared IndexedDB queue (used by page + worker)
   env.d.ts           # Ambient declarations for __IMMICH_*__ build-time globals
   index.html         # HTML shell (viewport meta, vendor scripts)
   tailwind-input.css # Tailwind source + custom CSS
@@ -113,26 +114,39 @@ Selecting many assets can take a while to upload, so the upload work runs in a
 This lets uploads keep going when the guest backgrounds the tab, locks the
 phone, or closes the screen.
 
-- `src/uploadManager.ts` is the page<->worker bridge: it registers the worker,
-  hands off the selected `File[]` + share `key` via `postMessage`, relays the
-  worker's progress/done/error/cancel messages to React, and on load calls
-  `requestUploadStatus()` so a reopened page can re-attach to an in-progress
-  upload.
-- The worker persists each file in **IndexedDB** (`wedding-uploads` DB), so the
-  queue survives a page reload or the worker being killed/restarted. It uploads
-  with the same concurrency (`UPLOAD_CONCURRENCY = 3`) + retry/backoff as the
-  in-page uploader, reusing `buildUploadFormData`/`assetsUploadUrl` from
-  `immich.ts`.
+- `src/uploadManager.ts` is the page<->worker bridge: it **persists the selected
+  `File[]` + share `key` to IndexedDB itself** (via `src/uploadQueue.ts`), then
+  posts a `{type:"process"}` message telling the worker to start draining the
+  queue. It relays the worker's progress/done/error/cancel messages to React,
+  and on load calls `requestUploadStatus()` so a reopened page can re-attach to
+  an in-progress upload.
+- **Why the PAGE writes IndexedDB (not the worker):** a `File` from an `<input>`
+  is only reliably readable in the document that owns it. Persisting it in the
+  worker after a `postMessage` transfer intermittently fails on Android with
+  `DataError: Failed to write blobs (InvalidBlob)` — which used to silently hang
+  the loading screen (no request, "can't upload till refresh") because the old
+  `enqueue` handler `await`ed `addRecords` BEFORE `processQueue()` and never told
+  the page it failed. Now `startBackgroundUpload` wraps `addRecords` in
+  try/catch and returns `false` on failure, so `MainMenu.startUpload` falls back
+  to the in-page uploader (which reads the `File` directly via XHR, no
+  IndexedDB) — the upload always proceeds.
+- `src/uploadQueue.ts` holds the shared IndexedDB logic (`wedding-uploads` DB:
+  `openDb`/`addRecords`/`getAllRecords`/`markDone`/`clearAll` + `QueueRecord`),
+  imported by BOTH the page and the worker. The queue survives a page reload or
+  the worker being killed/restarted. The worker uploads with concurrency
+  (`UPLOAD_CONCURRENCY = 3`) + retry/backoff, reusing
+  `buildUploadFormData`/`assetsUploadUrl` from `immich.ts`.
 - `event.waitUntil(...)` keeps the worker alive while uploads are in flight (so
   they continue after the page closes); a best-effort **Background Sync**
-  registration (`wedding-upload-sync`) is used to resume after the worker is
-  killed where supported.
+  registration (`wedding-upload-sync`, registered by the worker on `process`) is
+  used to resume after the worker is killed where supported.
 - The worker uses `fetch` (XMLHttpRequest is unavailable in workers), which
   cannot report request-body byte progress, so the worker's percentage is
   **file-count based** (bytes of COMPLETED files). The in-page fallback keeps the
   smooth byte-level progress.
-- **Fallback:** when service workers are unavailable (insecure context / old
-  browser), `MainMenu.startUpload` falls back to the original in-page
+- **Fallback:** two triggers — (a) service workers unavailable (insecure context
+  / old browser), or (b) IndexedDB persistence failed (`startBackgroundUpload`
+  returned `false`). In both cases `MainMenu.startUpload` runs the in-page
   `uploadFiles` flow with an `AbortController`. `LoadingScreen.cancel` aborts the
   controller in that case, or calls `cancelBackgroundUpload()` in worker mode.
 - **Cancel** clears the worker's IndexedDB queue (so a cancelled batch is not

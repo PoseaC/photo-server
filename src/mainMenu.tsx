@@ -15,6 +15,7 @@ interface MainMenuProps {
     setSelectedFiles: (files: File[]) => void;
     setUploadProgress: (progress: UploadProgress) => void;
     setUploadController: (controller: AbortController | null) => void;
+    setUploadCancellable: (cancellable: boolean) => void;
 }
 
 export class MainMenu extends React.Component<MainMenuProps> {
@@ -36,6 +37,19 @@ export class MainMenu extends React.Component<MainMenuProps> {
             currentFileName: "",
         });
 
+        // Show the loading screen right away, as soon as the guest finishes
+        // picking files, so they get immediate feedback instead of staring at
+        // the main screen while the (possibly slow) share-key fetch and
+        // IndexedDB persist run. The controller is null for now; the worker
+        // path keeps it null, the in-page fallback sets it below.
+        //
+        // Cancelling is disabled until the upload is actually registered (queue
+        // persisted + worker told to process, or the in-page controller set) so
+        // a tap during that window can't race a not-yet-started upload.
+        this.props.setUploadController(null);
+        this.props.setUploadCancellable(false);
+        setActiveMenu("loading");
+
         try {
             assertImmichConfig();
             const key = await fetchShareKey();
@@ -43,20 +57,21 @@ export class MainMenu extends React.Component<MainMenuProps> {
             // Preferred path: hand the files to the service worker so the upload
             // keeps running if the guest backgrounds the tab or closes it. The
             // completion/error/cancel transitions are driven by the worker's
-            // messages (handled in Index), so we just show the loading screen.
+            // messages (handled in Index).
             if (backgroundUploadSupported()) {
                 const started = await startBackgroundUpload(files, key);
                 if (started) {
-                    this.props.setUploadController(null);
-                    setActiveMenu("loading");
+                    // Queue persisted and worker told to process: safe to cancel.
+                    this.props.setUploadCancellable(true);
                     return;
                 }
             }
 
-            // Fallback: upload in the page (no service worker available).
+            // Fallback: upload in the page (no service worker, or persisting the
+            // queue failed). We're already on the loading screen.
             const controller = new AbortController();
             this.props.setUploadController(controller);
-            setActiveMenu("loading");
+            this.props.setUploadCancellable(true);
             await uploadFiles(files, key, {
                 onProgress: this.props.setUploadProgress,
                 signal: controller.signal,
