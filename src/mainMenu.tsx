@@ -8,7 +8,7 @@ import {
     isSupportedFile,
     uploadFiles,
 } from "./immich";
-import { backgroundUploadSupported, startBackgroundUpload } from "./uploadManager";
+import { backgroundUploadSupported, backgroundUploadDisabled, disableBackgroundUpload, startBackgroundUpload } from "./uploadManager";
 
 interface MainMenuProps {
     selectedFiles: File[];
@@ -58,13 +58,15 @@ export class MainMenu extends React.Component<MainMenuProps> {
             // keeps running if the guest backgrounds the tab or closes it. The
             // completion/error/cancel transitions are driven by the worker's
             // messages (handled in Index).
-            if (backgroundUploadSupported()) {
+            if (backgroundUploadSupported() && !backgroundUploadDisabled()) {
                 const started = await startBackgroundUpload(files, key);
                 if (started) {
                     // Queue persisted and worker told to process: safe to cancel.
                     this.props.setUploadCancellable(true);
                     return;
                 }
+                // Persisting the queue failed; don't keep retrying the worker.
+                disableBackgroundUpload();
             }
 
             // Fallback: upload in the page (no service worker, or persisting the

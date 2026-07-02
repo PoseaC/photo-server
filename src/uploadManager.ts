@@ -18,6 +18,20 @@ export interface UploadCallbacks {
 let callbacks: UploadCallbacks = {};
 let listenerAttached = false;
 
+// Once a background (service worker) upload fails on this device, stop using it
+// for the rest of the session and use the in-page uploader instead. Some
+// devices (notably Android) cannot reliably persist/read the selected file via
+// IndexedDB; the in-page uploader reads the File directly and always works.
+let inPagePreferred = false;
+
+export function disableBackgroundUpload(): void {
+  inPagePreferred = true;
+}
+
+export function backgroundUploadDisabled(): boolean {
+  return inPagePreferred;
+}
+
 // Service workers require a secure context (https or localhost). When that is
 // not available we fall back to the in-page uploader.
 export function backgroundUploadSupported(): boolean {

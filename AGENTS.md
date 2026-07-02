@@ -144,13 +144,26 @@ phone, or closes the screen.
   cannot report request-body byte progress, so the worker's percentage is
   **file-count based** (bytes of COMPLETED files). The in-page fallback keeps the
   smooth byte-level progress.
-- **Fallback:** two triggers — (a) service workers unavailable (insecure context
-  / old browser), or (b) IndexedDB persistence failed (`startBackgroundUpload`
-  returned `false`). In both cases `MainMenu.startUpload` runs the in-page
-  `uploadFiles` flow with an `AbortController`. `LoadingScreen.cancel` aborts the
-  controller in that case, or calls `cancelBackgroundUpload()` in worker mode.
+- **Fallback:** three triggers — (a) service workers unavailable (insecure
+  context / old browser), or (b) IndexedDB persistence failed
+  (`startBackgroundUpload` returned `false`), handled up-front in
+  `MainMenu.startUpload`; or (c) the worker upload itself FAILS after retries —
+  the worker `clearAll()`s the queue and broadcasts `upload-error`, and
+  `Index.onError` then runs the in-page `uploadFiles` flow for the current
+  selection (`Index.runInPageUpload`) instead of just alerting. In all cases the
+  in-page path uses an `AbortController`; `LoadingScreen.cancel` aborts it, or
+  calls `cancelBackgroundUpload()` in worker mode. After ANY worker failure the
+  page calls `disableBackgroundUpload()` so the rest of the session uploads
+  in-page directly (no more wasted worker attempts). This is what makes Android
+  reliable: even if IndexedDB blob persistence is broken on the device, the
+  upload still completes via the in-page uploader (which reads the `File`
+  directly, no IndexedDB), and failed records are cleared so they are never
+  re-counted on the next upload.
 - **Cancel** clears the worker's IndexedDB queue (so a cancelled batch is not
   resumed later) but the page keeps the file selection for an easy retry.
+- On a worker **failure** the queue is cleared too (records that failed after
+  retries are not left behind — otherwise each retry accumulated the previous
+  stuck files and re-counted them in the total).
 - Webpack has a second entry (`sw: './sw.ts'`) and emits `[name].js`, so the
   worker is a top-level `bin/sw.js` served at the site root with scope `/`.
 

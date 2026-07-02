@@ -180,8 +180,11 @@ async function processQueue(): Promise<void> {
       await Promise.all(Array.from({ length: poolSize }, () => worker()));
 
       if (failure) {
-        // Leave pending records in IndexedDB so the upload can be resumed later
-        // (e.g. when the page is reopened or Background Sync fires).
+        // The batch failed after retries. Clear the queue so the failed records
+        // are NOT re-counted or re-processed on the next upload (which used to
+        // make each retry accumulate the previous, stuck files). The page falls
+        // back to the in-page uploader for this selection.
+        await clearAll();
         await broadcast({
           type: "upload-error",
           message: (failure as Error)?.message || "Upload failed.",
