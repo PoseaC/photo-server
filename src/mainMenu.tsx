@@ -138,7 +138,7 @@ export class MainMenu extends React.Component<MainMenuProps> {
             <div className="place-self-center grid grid-cols-1 mx-2 my-3 md:m-8 md:grid-rows-4 gap-6">
                 <div className="title font md:row-span-3 self-center justify-self-stretch md:place-self-center grid grid-cols-1 md:grid-cols-2 gap-6 md:grid-rows-2 mb-2 md:mb-4">
                     <h1 className="text-2xl script row-1 md:cols-1 md:self-end md:mb-2 self-center">
-                        Alexandra & Iustin <br/> 5 Iulie 2026
+                        Ada & Iustin <br/> 5 Iulie 2026
                     </h1>
                     <img src="./img/photograph.jpg" alt="" className="row-span-4 md:row-span-2 md:row-start-1 md:cols-2 row-start-2 aspect-4/5 rounded-xl self-center justify-self-center max-w-[180px] md:max-w-[230px] object-contain w-full"/>
                     <div className="text-[1.18rem] w-full row-6 md:row-2 md:cols-1 md:self-start self-center">
