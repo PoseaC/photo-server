@@ -89,8 +89,7 @@ on transition — do NOT store upload state on a child component or it is lost.
   1. `GET /api/shared-links/me?slug=<slug>` → returns the share's **`key`**
      (base64url). The KEY, not the slug, authorizes uploads. Cached after first call.
   2. `POST /api/assets?key=<key>` (multipart/form-data) per file. Required form
-     fields: `assetData` (File), `deviceAssetId`, `deviceId`, `fileCreatedAt`,
-     `fileModifiedAt`, `isFavorite`.
+     fields: `assetData` (File), `fileCreatedAt`, `fileModifiedAt`, `isFavorite`.
 - **Status codes:** `201` = created, `200` = duplicate (Immich dedupes by
   checksum). BOTH are success — re-uploading the same file is safe/idempotent.
 - **Uploads use `XMLHttpRequest`**, not `fetch`, specifically to get

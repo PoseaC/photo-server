@@ -61,13 +61,10 @@ export function isRetryableHttpError(status: number): boolean {
 
 // Builds the multipart body for a single asset upload. Shared between the
 // in-page XHR uploader and the service-worker fetch uploader so both send an
-// identical request shape (and the same deviceAssetId, which Immich uses for
-// idempotent de-duplication).
+// identical request shape.
 export function buildUploadFormData(file: File): FormData {
   const created = new Date(file.lastModified || Date.now()).toISOString();
   const body = new FormData();
-  body.append("deviceAssetId", `${file.name}-${file.size}-${file.lastModified}`);
-  body.append("deviceId", "wedding-web-uploader");
   body.append("fileCreatedAt", created);
   body.append("fileModifiedAt", created);
   body.append("isFavorite", "false");
